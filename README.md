@@ -136,6 +136,20 @@
 1. 修改`ADMIN`或`KEY`变量的值，可以随机修改 **订阅地址里的TOKEN** 和 **用于节点验证的UUID**
 2. 设置`UUID`变量可以强制固定 **订阅地址里的TOKEN** 和 **用于节点验证的UUID**，注意必须是**UUIDv4**标准格式，否则会导致节点无法使用。
 
+### 探测真实 CF 落地点
+
+随机 CIDR 无法直接判断香港、日本、新加坡等真实落地点。可在本地网络运行脚本探测候选 IP，并把输出粘贴到后台 `ADD.txt`：
+
+```bash
+node scripts/probe-cf-ips.mjs --host 你的域名 --input ips.txt --regions 香港,日本,新加坡 --limit-per-region 4
+```
+
+`ips.txt` 每行一个候选 IP，脚本会请求 `https://你的域名/cdn-cgi/trace` 并按 `colo` 生成：
+
+```text
+104.18.1.1:443#香港 CF优选1
+```
+
 本工具支持通过 **PATH路径** 动态切换底层代理方案：
 
 - 指定 `PROXYIP` 案例
