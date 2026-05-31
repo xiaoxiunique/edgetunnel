@@ -5163,6 +5163,63 @@ function 识别运营商(request) {
 	return 命中运营商 || ASN运营商映射[String(cf?.asn || '')] || 'cf';
 }
 
+function 获取CF接入位置名称(request) {
+	const cf = request?.cf || {};
+	const colo = String(cf.colo || '').toUpperCase();
+	const colo位置映射 = {
+		HKG: '香港',
+		NRT: '日本',
+		HND: '日本',
+		KIX: '日本',
+		FUK: '日本',
+		SIN: '新加坡',
+		TPE: '台湾',
+		ICN: '韩国',
+		LAX: '美国',
+		SJC: '美国',
+		SEA: '美国',
+		DFW: '美国',
+		ORD: '美国',
+		IAD: '美国',
+		EWR: '美国',
+		LHR: '英国',
+		CDG: '法国',
+		FRA: '德国',
+		AMS: '荷兰',
+		SYD: '澳大利亚',
+		MEL: '澳大利亚',
+	};
+	if (colo位置映射[colo]) return colo位置映射[colo];
+
+	const city = String(cf.city || '').trim();
+	const city位置映射 = {
+		'Hong Kong': '香港',
+		Tokyo: '日本',
+		Osaka: '日本',
+		Fukuoka: '日本',
+		Singapore: '新加坡',
+		Taipei: '台湾',
+		Seoul: '韩国',
+	};
+	if (city位置映射[city]) return city位置映射[city];
+
+	const country = String(cf.country || '').toUpperCase();
+	const 国家位置映射 = {
+		HK: '香港',
+		JP: '日本',
+		SG: '新加坡',
+		TW: '台湾',
+		KR: '韩国',
+		US: '美国',
+		GB: '英国',
+		FR: '法国',
+		DE: '德国',
+		NL: '荷兰',
+		AU: '澳大利亚',
+	};
+	return 国家位置映射[country] || '';
+}
+
 async function 生成随机IP(request, count = 16, 指定端口 = -1) {
 	const url = new URL(request.url);
 	const 查询参数运营商 = String(url.searchParams.get('asOrg') || '').toLowerCase();
@@ -5175,6 +5232,7 @@ async function 生成随机IP(request, count = 16, 指定端口 = -1) {
 	};
 	const cidr_url = 运营商文件标识 === 'cf' ? 'https://raw.githubusercontent.com/cmliu/cmliu/main/CF-CIDR.txt' : `https://raw.githubusercontent.com/cmliu/cmliu/main/CF-CIDR/${运营商文件标识}.txt`;
 	const cfname = 运营商名称映射[运营商文件标识] || 'CF官方优选';
+	const 接入位置名称 = 获取CF接入位置名称(request);
 	const cfport = [443, 2053, 2083, 2087, 2096, 8443];
 	let cidrList = [];
 	try { const res = await fetch(cidr_url); cidrList = res.ok ? await 整理成数组(await res.text()) : ['104.16.0.0/13'] } catch { cidrList = ['104.16.0.0/13'] }
@@ -5191,7 +5249,7 @@ async function 生成随机IP(request, count = 16, 指定端口 = -1) {
 		const 目标端口 = 指定端口 === -1
 			? cfport[Math.floor(Math.random() * cfport.length)]
 			: 指定端口;
-		return `${ip}:${目标端口}#${cfname}${index + 1}`;
+		return `${ip}:${目标端口}#${接入位置名称 ? 接入位置名称 + ' ' : ''}${cfname}${index + 1}`;
 	});
 	return [randomIPs, randomIPs.join('\n')];
 }
