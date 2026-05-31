@@ -5256,6 +5256,7 @@ function 按地区筛选优选IP(优选IP列表, 地区筛选配置 = {}) {
 	return 优选IP列表
 		.map((节点, index) => ({ 节点, index, 地区: 识别节点地区(节点) }))
 		.filter(({ 地区 }) => {
+			if (地区 === '其他') return true;
 			const 当前数量 = 地区计数.get(地区) || 0;
 			if (当前数量 >= 每地区最多节点) return false;
 			地区计数.set(地区, 当前数量 + 1);
@@ -5277,7 +5278,6 @@ async function 生成随机IP(request, count = 16, 指定端口 = -1) {
 	};
 	const cidr_url = 运营商文件标识 === 'cf' ? 'https://raw.githubusercontent.com/cmliu/cmliu/main/CF-CIDR.txt' : `https://raw.githubusercontent.com/cmliu/cmliu/main/CF-CIDR/${运营商文件标识}.txt`;
 	const cfname = 运营商名称映射[运营商文件标识] || 'CF官方优选';
-	const 接入位置名称 = 获取CF接入位置名称(request);
 	const cfport = [443, 2053, 2083, 2087, 2096, 8443];
 	let cidrList = [];
 	try { const res = await fetch(cidr_url); cidrList = res.ok ? await 整理成数组(await res.text()) : ['104.16.0.0/13'] } catch { cidrList = ['104.16.0.0/13'] }
@@ -5294,7 +5294,7 @@ async function 生成随机IP(request, count = 16, 指定端口 = -1) {
 		const 目标端口 = 指定端口 === -1
 			? cfport[Math.floor(Math.random() * cfport.length)]
 			: 指定端口;
-		return `${ip}:${目标端口}#${接入位置名称 ? 接入位置名称 + ' ' : ''}${cfname}${index + 1}`;
+		return `${ip}:${目标端口}#${cfname}${index + 1}`;
 	});
 	return [randomIPs, randomIPs.join('\n')];
 }
